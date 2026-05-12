@@ -10,26 +10,26 @@
 \maketitle
 
 \begin{abstract}
-En este informe se abordará el desarrollo del trabajo práctico Nro 1, el cual se enfoca en aplificadores realimentados.
+En este informe se abordará el desarrollo del trabajo práctico Nro 1, en el cual trataremos de poner en funcionamiento nuestra BluePill, para luego hacerla andar con un led usando sus direcciones GPIO.
 \end{abstract}
 
 \begin{IEEEkeywords}
-Ganancia, impedancia, desensibilidad, frecuencias.
+BluePill, GPIO, LED, Memoria
 \end{IEEEkeywords}
 
 \section{Introducción}
-\IEEEPARstart{E}{n} el siguiente informe se detallará el desarrollo del trabajo práctico Nro 1, en el cual deberemos aplificar una señal de entrada y medir la ganancia tanto para lazo abierto como para lazo cerrado, además se modificará el circuito para poder medir la desensibilidad . Luego colocaremos trimpot en la entrada del circuito para medir la impedancia de entrada y luego lo mismo para la impedancia de salida. Luego con la desensibilidad calcularemos las impedancias respectivas para lazo cerrado.
-Todos los detalles y puntos a tener en cuenta se encuentran detallados en este informe.
+\IEEEPARstart{E}{n} 
 
 \input{parte1}
+\input{parte2}
 
 \section{Conclusión}
-Se logró verificar que para un aplificador realimentado a lazo abierto, la ganancia es mayor pero su ancho de banda no es tan amplio, mientras que para un aplificador realimentado a lazo cerrado, la ganancia es menor pero su ancho de banda es más amplio. Esto se visualizó en los graficos obtenidos luego de hacer el barrido de frecuencias para ambos casos, empezando la aplificacion a partir de los 100Hz y manteniendose estable hasta los 100kHz para lazo abierto, mientras que para lazo cerrado se mantiene hasta 1MHz.
+Se logró poner en funcionamiento la BluePill, y se logró hacer andar un led usando sus direcciones GPIO. Para esto se tuvo que usar los comandos para la placa clon, ademas de modificar el Makefile para añadir dicho comando y así que funcione de manera correcta-
 
 % Referencias bibliográficas
 \begin{thebibliography}{1}
 \bibitem{IEEEhowto:kopka}
-Guía Realimentación 2018 Rev02
+Guía
 \end{thebibliography}
 
 
