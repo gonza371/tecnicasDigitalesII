@@ -1,0 +1,226 @@
+\subsection{main.c}
+\begin{lstlisting}[caption={Configuración inicial en main.c}, label={cod:main}]
+#include <stdint.h>
+// register address
+#define RCC_BASE 0x40021000
+#define GPIOC_BASE 0x40011000
+#define GPIOA_BASE 0x40010800
+#define RCC_APB2ENR *(volatile uint32_t *)(RCC_BASE + 0x18)
+#define GPIOC_CRH *(volatile uint32_t *)(GPIOC_BASE + 0x04)
+#define GPIOA_CRL *(volatile uint32_t *)(GPIOA_BASE + 0x00)
+#define GPIOC_ODR *(volatile uint32_t *)(GPIOC_BASE + 0x0C)
+#define GPIOA_ODR *(volatile uint32_t *)(GPIOA_BASE + 0x0C)
+// bit fields
+#define RCC_IOPCEN (1 << 4)
+#define RCC_IOPAEN (1 << 2)
+#define GPIOC13 (1UL << 13)
+#define GPIOA7 (1UL << 7)
+// --- Registros del SysTick (Cortex-M Core) ---
+#define SysTick_BASE 0xE000E010
+#define SysTick_CTRL *(volatile uint32_t *)(SysTick_BASE + 0x00)
+#define SysTick_LOAD *(volatile uint32_t *)(SysTick_BASE + 0x04)
+#define SysTick_VAL  *(volatile uint32_t *)(SysTick_BASE + 0x08)
+// Bits de control de SysTick
+#define SysTick_CTRL_ENABLE    (1 << 0) // Habilita el contador
+#define SysTick_CTRL_TICKINT   (1 << 1) // Habilita la interrupción de SysTick
+#define SysTick_CTRL_CLKSOURCE (1 << 2) // Fuente de reloj
+#define SysTick_CTRL_COUNTFLAG (1 << 16) // Bandera de desborde
+volatile uint32_t tick;
+// función que atiende la interrupción
+void SysTick_Handler(void)
+{
+    tick++;
+}
+// inicialización del systick
+void systick_init_ms(void)
+{
+    tick = 0;
+    SysTick_CTRL &= ~SysTick_CTRL_CLKSOURCE; // Reloj de SysTick a HCLK/8 (8MHz / 8 = 1MHz -> 1 tick = 1us)
+    SysTick_LOAD = 999; // Poner valor de RECARGA para 1000 ticks (1ms) (1000 - 1) = 999
+    SysTick_VAL = 0; // reset del contador
+    SysTick_CTRL |= SysTick_CTRL_TICKINT | SysTick_CTRL_ENABLE; // Habilitar la interrupción de SysTick (TICKINT) Y el contador (ENABLE)
+}
+// función delay 
+void delay_ms_bloqueante(uint32_t ms)
+{
+    uint32_t tiempo_inicio = tick + ms;
+    // Espera activa hasta que el contador global haya avanzado 'ms' milisegundos
+    while (tick != tiempo_inicio) ;
+}
+void main(void)
+{
+    RCC_APB2ENR |= RCC_IOPCEN;
+    RCC_APB2ENR |= RCC_IOPAEN;
+    GPIOC_CRH &= 0xFF0FFFFF;
+    GPIOC_CRH |= 0x00200000;
+    GPIOA_CRL &= 0x0FFFFFFF;
+    GPIOA_CRL |= 0x20000000;
+    systick_init_ms();
+    while (1)
+    {
+        
+        GPIOC_ODR &= ~GPIOC13;
+        delay_ms_bloqueante(500); 
+        GPIOC_ODR |= GPIOC13;
+        delay_ms_bloqueante(500); 
+
+        GPIOA_ODR |= GPIOA7;                  
+        delay_ms_bloqueante(500);              
+        GPIOA_ODR &= ~GPIOA7;                 
+        delay_ms_bloqueante(500);              
+
+    }
+}
+\end{lstlisting}
+\subsection{crt.s}
+\begin{lstlisting}[language=ARMasm]
+.syntax unified 
+.cpu cortex-m3
+.thumb
+.extern _esstack
+
+.section .text.manejadores // definimos la seccion text.manejadores 
+
+// función básica para manejar los punteros 
+.thumb_func 
+.weak Default_Handler
+Default_Handler:
+    b .             /* Bucle infinito */
+
+// definir los vectores ejemplo
+.weak NMI_Handler
+.thumb_set NMI_Handler, Default_Handler
+.weak SysTick_Handler
+.thumb_set SysTick_Handler, Default_Handler
+.weak HardFault_Handler
+.thumb_set HardFault_Handler, Default_Handler
+
+// vectores 
+.section .isr_vector,"a",%progbits
+.word _esstack
+.word _reset
+.word NMI_Handler         /* 2:  NMI (Non-Maskable Interrupt) */
+.word HardFault_Handler   /* 3:  HardFault (falla grave) */
+.word 0                   /* 4:  MemManage (falla de memoria) */
+.word 0                   /* 5:  BusFault (falla de bus) */
+.word 0                   /* 6:  UsageFault (falla de uso) */
+.word 0                   /* 7:  Reservado */
+.word 0                   /* 8:  Reservado */
+.word 0                   /* 9:  Reservado */
+.word 0                   /* 10: Reservado */
+.word 0                   /* 11: SVCall (Llamada al Supervisor) */
+.word 0                   /* 12: Debug Monitor */
+.word 0                   /* 13: Reservado */
+.word 0                   /* 14: PendSV (Interrupción pendiente del sistema) */
+.word SysTick_Handler     /* 15: El handler del SysTick */
+
+// declaramos la función _reset dentro de la seccion text.reset
+.section .text.reset
+.thumb_func
+.global _reset
+_reset:
+    bl main
+    b .
+\end{lstlisting}
+\subsection{linker.ld}
+
+\begin{lstlisting}[language=Linker]
+MEMORY
+MEMORY
+{
+  FLASH (rx) : ORIGIN = 0x08000000, LENGTH = 64K
+  RAM (xrw)  : ORIGIN = 0x20000000, LENGTH = 20K
+}
+
+/* 2. Definición de Símbolos Globales */
+ENTRY(_reset) /* El punto de entrada, definido en tu crt.s */
+
+/* Símbolo para el final de la pila, usado en tu .isr_vector */
+_esstack = ORIGIN(RAM) + LENGTH(RAM); /* 0x20005000 (el final de los 20K de RAM) */
+
+/* 3. Definición de las Secciones de Salida */
+SECTIONS
+{
+  /* SECCIONES EN FLASH */
+  /* La tabla de vectores debe ir primero en la Flash */
+  .isr_vector :
+  {
+    KEEP(*(.isr_vector))  /* Mantiene la sección .isr_vector de tu crt.s */
+  } > FLASH
+
+  /* Código del programa y datos de solo lectura */
+  .text :
+  {
+    *(.text)             /* Todo el código C y ensamblador */
+    *(.text*)            /* Variantes de .text */
+    *(.rodata)           /* Datos de solo lectura (constantes) */
+    *(.rodata*)
+  } > FLASH
+  /* SECCIONES EN RAM */
+  /* .data: Variables inicializadas con un valor distinto de cero (ej: int x = 10;) */
+  /* El linker necesita símbolos para que el startup mueva los datos */
+  _sidata = LOADADDR(.data); /* Dirección de los valores en FLASH */
+
+  .data :
+  {
+    _sdata = .;           /* Inicio de .data en RAM */
+    *(.data)
+    *(.data*)
+    _edata = .;           /* Fin de .data en RAM */
+  } > RAM AT> FLASH     /* Ubicada en RAM, pero cargada desde FLASH */
+  /* .bss: Variables inicializadas a cero o sin inicializar */
+  /* (ej: static int y; o int z = 0;) */
+  .bss :
+  {
+    _sbss = .;            /* Símbolo de inicio de .bss */
+    *(.bss)
+    *(.bss*)
+    *(COMMON)
+    _ebss = .;            /* Símbolo de fin de .bss */
+  } > RAM               /* Solo ocupa espacio en RAM */
+}
+
+\end{lstlisting}
+
+\subsection{makefile}
+\begin{lstlisting}[language=MyMake]
+SRC_DIR = src
+BUILD_DIR = build
+CC = arm-none-eabi-gcc
+AS = arm-none-eabi-as
+LD = arm-none-eabi-ld
+BIN = arm-none-eabi-objcopy
+CFLAGS = -mthumb -mcpu=cortex-m3 -o0 -g
+
+all: app.bin
+
+$(BUILD_DIR):
+	mkdir $(BUILD_DIR)
+
+crt.o: $(BUILD_DIR) $(SRC_DIR)/crt.s
+	$(AS) -o $(BUILD_DIR)/crt.o $(SRC_DIR)/crt.s
+
+main.o: $(BUILD_DIR) $(SRC_DIR)/main.c
+	$(CC) $(CFLAGS) -c -o $(BUILD_DIR)/main.o $(SRC_DIR)/main.c
+
+app.elf: $(BUILD_DIR) $(SRC_DIR)/linker.ld crt.o main.o
+	$(LD) -T $(SRC_DIR)/linker.ld -o $(BUILD_DIR)/app.elf $(BUILD_DIR)/crt.o $(BUILD_DIR)/main.o 
+
+app.bin: app.elf
+	$(BIN) -O binary $(BUILD_DIR)/app.elf $(BUILD_DIR)/app.bin
+
+clean:
+	rm -rf $(BUILD_DIR)
+
+openocd-flash: app.bin
+	openocd -f interface/stlink.cfg -c "set CPUTAPID 0x2ba01477" -f target/stm32f1x.cfg \
+	-c "init" -c "reset halt" \
+	-c "flash write_image erase $(BUILD_DIR)/app.bin 0x08000000" \
+	-c "reset run" -c "exit"
+
+openocd-erase:
+	openocd -f interface/stlink.cfg -c "set CPUTAPID 0x2ba01477" -f target/stm32f1x.cfg \
+	-c "init" -c "reset halt" \
+	-c "flash erase_sector 0 0 last" -c "reset run" -c "exit"
+
+\end{lstlisting}

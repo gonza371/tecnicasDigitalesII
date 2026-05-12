@@ -10,7 +10,7 @@
 \maketitle
 
 \begin{abstract}
-En este informe se abordará el desarrollo del trabajo práctico Nro 1, en el cual trataremos de poner en funcionamiento nuestra BluePill, para luego hacerla andar con un led usando sus direcciones GPIO.
+En este informe se abordará el desarrollo del trabajo práctico Nro 1, donde se pondrá en funcionamiento y se programará la BluePill para luego hacerla andar con un led usando sus direcciones GPIO.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -18,21 +18,20 @@ BluePill, GPIO, LED, Memoria
 \end{IEEEkeywords}
 
 \section{Introducción}
-\IEEEPARstart{E}{n} 
+\IEEEPARstart{E}{n} este informe se pondrá en funcionamiento y se programará la placa BluePill en la modalidad BareMetal usando como base códigos ya proporcionados como guías, los cuales se deberán modificar para llevr a cabo dos implementaciones.
+
+\input{compilacion}
 
 \input{parte1}
+
 \input{parte2}
 
 \section{Conclusión}
-Se logró poner en funcionamiento la BluePill, y se logró hacer andar un led usando sus direcciones GPIO. Para esto se tuvo que usar los comandos para la placa clon, ademas de modificar el Makefile para añadir dicho comando y así que funcione de manera correcta-
-
+Se logró poner en funcionamiento la BluePill, y se logró hacer andar un led usando sus direcciones GPIO. Para esto se tuvo que usar los comandos para la placa clon, ademas de modificar el Makefile para añadir dicho comando y así que funcione de manera correcta. Lo más difícil de este trabajo fue comenzar a pensar el codigo en base a los registros, ya que es un nivel de abstracción al que no estabamos acostumbrados, pero una vez que logramos comprender el funcionamiento del código logramos comprender mejor como funciona un microcontrolador a nivel de hardware, nos resultó particularmente interesante como un programa de alto nivel pasa a ser encender o apagar determinados bits de ciertos registros. 
 % Referencias bibliográficas
-\begin{thebibliography}{1}
-\bibitem{IEEEhowto:kopka}
-Guía
-\end{thebibliography}
+\section{CODIGOS}
 
-
+\input{codigos}
 
 
 \end{document}

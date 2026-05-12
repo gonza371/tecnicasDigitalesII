@@ -1,1 +1,40 @@
-\section{Desarrollo Experimental 1}
+\section{retardo por interrupciones}
+Ahora se busca generar un retardo mediante interrupciones  SysTick, para esto se modificará el código de la parte anterior para generar un retardo utilizando interrupciones. Las midificaciones realizadas para generar el retardo por interrupciones fueron las siguientes:
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.49\textwidth]{images/definiciones2.png}
+    \caption*{Definiciones de los registros para interrupciones}
+    \label{fig:parte2}
+    
+\end{figure}
+
+\begin{itemize}
+    \item Se definió el registro \textbf{SYSTICK\_BASE} con la dirección de memoria del periférico SysTick, la cual es 0xE000E010.
+    \item Se definió el registro \textbf{SYSTICK\_CTRL} el cual se utiliza para controlar el funcionamiento del SysTick.
+    \item Se definió el registro \textbf{SYSTICK\_LOAD} el cual guarda el valor inicial desde donde empezará la cuenta regresiva.
+    \item Se definió el registro \textbf{SYSTICK\_VAL} el cual guarda el valor actual del contador, este registro se puede leer para conocer el valor actual del contador.
+    \item Se definió la máscara \textbf{SYSTICK\_ENABLE} la cual se utiliza para habilitar el contador del SysTick, al ponerse en 1 el contador comenzará a descontar desde el valor cargado en el registro SYSTICK\_LOAD.
+    \item Se definió la máscara \textbf{SYSTICK\_TICKINT} la cual se utiliza para habilitar las interrupciones del SysTick, al ponerse en 1 se habilitan las interrupciones y al llegar a 0 el contador generará una interrupción.
+    \item Se definió la máscara \textbf{SYSTICK\_CLKSOURCE} la cual se utiliza para seleccionar la fuente de reloj del SysTick, al ponerse en 1 se selecciona el reloj del procesador (HCLK) y al ponerse en 0 se selecciona el reloj del procesador dividido 8 (HCLK/8).
+    \item Se definió la máscara \textbf{SYSTICK\_COUNTFLAG} la cual se utiliza para verificar si el contador ha llegado a 0, al leer este bit se pone en 0 automáticamente.
+    \item Se definió la variable global \textbf{tick} la cual se utiliza para contar la cantidad de interrupciones generadas por el SysTick, esta variable se incrementa en cada interrupción y se utiliza para generar el retardo deseado.
+\end{itemize}
+Luego se agregaron las siguientes funciones para configurar el SysTick y generar el retardo por interrupciones:
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.49\textwidth]{images/funciones2.png}
+    \caption*{Funciones para configurar el SysTick y generar el retardo por interrupciones}
+    \label{fig:funciones}
+\end{figure}
+\begin{itemize}
+    \item La función \textbf{SysTick\_Handler} es la rutina de servicio de interrupción del SysTick, esta función se ejecuta cada vez que se genera una interrupción, en esta función se incrementa la variable global \textbf{tick} para contar la cantidad de interrupciones generadas.
+    \item La función \textbf{sysTick\_init\_ms} es la función que se utiliza para configurar el SysTick para generar interrupciones cada cierto tiempo. Esta pone en 0 la variable tick cada vez que se inicia, hace que se divida el reloj del procesador en 8, se configura el disparo en $1ms$, inicializa la variable VAL en 0 y habilita el contador y las interrupciones del SysTick.
+    \item La función \textbf{delay\_ms\_bloqueante} es la función que se utiliza para hacer parpadear los leds utilizando el retardo por interrupciones.
+\end{itemize}
+Con esto en cuanta lo que se modificó en la función \textbf{main} para generar el retardo por interrupciones fue lo siguiente:
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.49\textwidth]{images/main2.png}
+    \caption*{Función main con retardo por interrupciones}
+    \label{fig:main2}
+\end{figure}

@@ -1,7 +1,35 @@
 \raggedbottom
 
-\section{Desarrollo Experimental 1}
+\section{Parpadeo de leds: GPIO e integrado en placa}
+Para este programa se usará el código de guía \textit{main.c} el cual ya hace parpadear el led de la placa, las modificaciones que se le harán a este código serán para hacer parpadear en conjunto con este otro led externo conectado a la placa en una GPIO.
+\newpage
+\begin{figure}
+    \centering
+    \includegraphics[width=0.49\textwidth]{images/definiciones1.png}
+    \caption*{Definiciones de los registros en main.c}
+    \label{fig:led}
+\end{figure}
+Aquí se configuran los registros necesarios para configurar los pines de la placa y su modo de funcionamiento. Las modificaciones que se realizadas para configurar el pin GPIOA7 fueron las siguientes:
+\begin{itemize}
+    \item Se definió el registro \textbf{GPIOA\_BASE} con la dirección de memoria del puerto A, la cual es 0x40010800.
+    \item Se definió el registro \textbf{GPIOA\_CRL}, el registro CRL (Control Register Low) se utiliza para configurar los pines del puerto A desde el pin 0 al pin 7, el registro CRL siempre tiene un offset de 0x00 y sirve para determinar el modo de funcionamiento de cada pin.
+    \item Se definió el registro \textbf{GPIOA\_ODR} para escribir el estado del pin, el registro ODR (Output Data Register) tiene un offset de 0x0C ya que se utiliza para escribir el estado del pin cuando este se encuentra configurado como salida.
+    \item Se definió la máscara \textbf{RCC\_IOPAEN} la cual se utiliza para habilitar el reloj del puerto A, esta máscara tiene un corrimiento de 2 bits ya que el bit 2 del registro RCC\_APB2ENR se utiliza para habilitar el reloj del puerto A.
+    \item Se definió la máscara \textbf{GPIOA7} la cual se utiliza para configurar el pin A7 con un corrimento de 7 bits. Se utiliza Unsigned long para evitar overflows al hacer el corrimiento de bits. 
+\end{itemize}
 
+Luego, en la función \textbf{main} se realizaron las siguientes modificaciones:
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.4\textwidth]{images/main1.png}
+    \caption*{Modificaciones en la función main}
+    \label{fig:main1}
+\end{figure}
 
-
-
+\begin{itemize}
+    \item En \textbf{RCC\_APB2ENR} se habilitó el reloj del puerto A utilizando la máscara \textbf{RCC\_IOPAEN}.
+    \item En \textbf{GPIOA\_CRL \&=} se ponen en 0 los cuatro bits correspondientes al pin A7 como medida de limpieza.
+    \item En \textbf{GPIOA\_CRL \textbar=} se configura el pin A7 como salida en modo Push-Pull a una velocidad de 2 MHz (b0010).
+    \item En el ciclo "while" se agregaron dos líneas para escribir el estado del pin A7 utilizando el registro \textbf{GPIOA\_ODR}. Para encender el led se utiliza la operación OR con la máscara \textbf{GPIOA7} y para apagarlo se utiliza la operación AND con la negación de la máscara \textbf{GPIOA7}.
+\end{itemize}
+    La utilización de la función \textbf{delay\_ms\_bloqueante} es para generar un retardo entre el encendido y apagado de los leds.
