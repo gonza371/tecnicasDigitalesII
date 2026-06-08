@@ -38,14 +38,14 @@ A continuación agregamos las funciones de interrupción para los botones, las c
     \centering
     \includegraphics[width=0.4\textwidth]{images/funciones.png}
     \caption*{Agregado de funciones para interrupciones}
-    \label{fig:main1}
+    \label{fig:funciones}
 \end{figure}
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.4\textwidth]{images/funciones2.png}
     \caption*{Agregado de funciones para interrupciones}
-    \label{fig:main1}
+    \label{fig:funciones2}
 \end{figure}
 
 Ahora pasamos a modificar la función \textbf{main}
@@ -54,9 +54,11 @@ Ahora pasamos a modificar la función \textbf{main}
     \centering
     \includegraphics[width=0.45\textwidth]{images/main.png}
     \caption*{Configuración de los pines y las interrupciones en main}
-    \label{fig:main1}
+    \label{fig:main}
 \end{figure}
 
 Primero habilitamos los clocks del GPIO y AFIO, luego configuramos los pines A5, A6 y A7 como salida, y los A1 y A2 como entrada con pull-up. Luego asociamos el pin GPIO a la línea EXTI y pasamos a configurar las interrupciones como flancos descendentes, por ultimo configuramos el NVIC con las prioridades correspondientes. 
 
 \subsection{Imagenes del Funcionamiento}
+
+

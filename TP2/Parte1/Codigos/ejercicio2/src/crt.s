@@ -37,6 +37,11 @@ Default_Handler:
 .word 0                   /* 13: Reservado */
 .word 0                   /* 14: PendSV (Interrupción pendiente del sistema) */
 .word SysTick_Handler     /* 15: El handler del SysTick */
+.word RCC_IRQHandler
+.word EXTI0_IRQHandler      
+.word EXTI1_IRQHandler      
+.word EXTI2_IRQHandler      
+.word EXTI3_IRQHandler      
 
 // declaramos la función _reset dentro de la seccion text.reset
 .section .text.reset
