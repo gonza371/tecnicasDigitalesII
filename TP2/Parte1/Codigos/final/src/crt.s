@@ -14,11 +14,45 @@ Default_Handler:
 // definir los vectores ejemplo
 .weak NMI_Handler
 .thumb_set NMI_Handler, Default_Handler
+
 .weak SysTick_Handler
 .thumb_set SysTick_Handler, Default_Handler
+
 .weak HardFault_Handler
 .thumb_set HardFault_Handler, Default_Handler
 
+.weak WWDG_IRQHandler
+.thumb_set WWDG_IRQHandler, Default_Handler
+
+.weak PVD_IRQHandler
+.thumb_set PVD_IRQHandler, Default_Handler
+
+.weak TAMPER_IRQHandler
+.thumb_set TAMPER_IRQHandler, Default_Handler
+
+.weak RTC_IRQHandler
+.thumb_set RTC_IRQHandler, Default_Handler
+
+.weak FLASH_IRQHandler
+.thumb_set FLASH_IRQHandler, Default_Handler
+
+.weak RCC_IRQHandler
+.thumb_set RCC_IRQHandler, Default_Handler
+
+.weak EXTI0_IRQHandler
+.thumb_set EXTI0_IRQHandler, Default_Handler
+
+.weak EXTI1_IRQHandler
+.thumb_set EXTI1_IRQHandler, Default_Handler
+
+.weak EXTI2_IRQHandler
+.thumb_set EXTI2_IRQHandler, Default_Handler
+
+.weak EXTI3_IRQHandler
+.thumb_set EXTI3_IRQHandler, Default_Handler
+
+.weak EXTI4_IRQHandler
+.thumb_set EXTI4_IRQHandler, Default_Handler
 // vectores 
 .section .isr_vector,"a",%progbits
 .word _esstack
@@ -38,7 +72,6 @@ Default_Handler:
 .word 0                   /* 14: PendSV (Interrupción pendiente del sistema) */
 .word SysTick_Handler     /* 15: El handler del SysTick */
 
-/* --- Interrupciones Externas (IRQs) --- */
 
 .word WWDG_IRQHandler
 .word PVD_IRQHandler

@@ -20,16 +20,20 @@
 #define EXTI_FTSR    *(volatile uint32_t *)(EXTI_BASE + 0x0C)
 #define EXTI_PR      *(volatile uint32_t *)(EXTI_BASE + 0x14)
 #define NVIC_ISER0   *(volatile uint32_t *)(NVIC_BASE + 0x00)
-#define NVIC_IPR     ((volatile uint8_t *)(NVIC_BASE + 0x400))
+
+// <-- CORRECCIÓN: Registros robustos de 32 bits para prioridades -->
+#define NVIC_IPR1    *(volatile uint32_t *)(NVIC_BASE + 0x304) // Controla IRQ 4 a 7
+#define NVIC_IPR2    *(volatile uint32_t *)(NVIC_BASE + 0x308) // Controla IRQ 8 a 11
+#define SCB_SHPR3    *(volatile uint32_t *)(0xE000ED20)        // Controla prioridad del SysTick
 
 // --- Campos de Bits ---
 #define RCC_AFIOEN (1 << 0)
 #define RCC_IOPAEN (1 << 2)
 #define RCC_IOPCEN (1 << 4)
 #define GPIOC13    (1UL << 13)
-#define GPIOA7     (1UL << 7) // LED Normalidad
 #define GPIOA6     (1UL << 6) // LED Botón Baja Prioridad
 #define GPIOA5     (1UL << 5) // LED Botón Alta Prioridad
+#define GPIOA4     (1UL << 4) // LED Normalidad en PA4
 
 // --- Registros del SysTick ---
 #define SysTick_BASE 0xE000E010
@@ -43,7 +47,7 @@
 
 volatile uint32_t tick;
 
-// --- Funciones de Tiempo (Declaradas antes para poder usarlas en las ISR) ---
+// --- Funciones de Tiempo ---
 
 void systick_init_ms(void)
 {
@@ -56,16 +60,14 @@ void systick_init_ms(void)
 
 void delay_ms_bloqueante(uint32_t ms)
 {
-    uint32_t tiempo_inicio = tick + ms;
-    // Mientras esperamos, el SysTick interrumpe periódicamente este bucle
-    while (tick != tiempo_inicio);
+    uint32_t tiempo_inicio = tick;
+    while ((tick - tiempo_inicio) < ms); 
 }
 
 // --- Rutinas de Servicio de Interrupción (ISR) ---
 
 void SysTick_Handler(void)
 {
-    // SysTick tiene prioridad 0x00 (la máxima). Siempre actualizará el tiempo.
     tick++;
 }
 
@@ -74,17 +76,14 @@ void EXTI1_IRQHandler(void)
 {
     if (EXTI_PR & (1 << 1))
     {
-        // Limpiamos el flag primero para que futuras pulsaciones se registren correctamente
-        EXTI_PR |= (1 << 1); 
+        EXTI_PR = (1 << 1); 
         
-        // Encendemos y apagamos 5 veces (10 cambios de estado en total)
         for (int i = 0; i < 10; i++)
         {
             GPIOA_ODR ^= GPIOA6; 
-            delay_ms_bloqueante(200); // Demora visible de 200ms
+            delay_ms_bloqueante(200);
         }
         
-        // Nos aseguramos de que el LED quede apagado al salir
         GPIOA_ODR &= ~GPIOA6; 
     }
 }
@@ -94,16 +93,13 @@ void EXTI2_IRQHandler(void)
 {
     if (EXTI_PR & (1 << 2))
     {
-        // Limpiamos el flag
-        EXTI_PR |= (1 << 2); 
+        EXTI_PR = (1 << 2); 
         
-        // Encendemos y apagamos 5 veces
         for (int i = 0; i < 10; i++)
         {
             GPIOA_ODR ^= GPIOA5; 
             delay_ms_bloqueante(200);
         }
-        
         
         GPIOA_ODR &= ~GPIOA5;
     }
@@ -121,10 +117,9 @@ void main(void)
     GPIOC_CRH &= 0xFF0FFFFF;
     GPIOC_CRH |= 0x00200000;
     
-    // Configurar PA7, PA6 y PA5 como SALIDAS push-pull (2)
-    // Configurar PA2 y PA1 como ENTRADAS pull-up/down (8)
-    GPIOA_CRL &= 0x000FF00F; 
-    GPIOA_CRL |= 0x22200880; 
+    // Configurar PA6, PA5, PA4 (salidas) y PA2, PA1 (entradas)
+    GPIOA_CRL &= 0xF000F00F; 
+    GPIOA_CRL |= 0x02220880; 
     
     // Activamos resistencias Pull-up internas en PA1 y PA2
     GPIOA_ODR |= (1 << 1) | (1 << 2);
@@ -136,10 +131,21 @@ void main(void)
     EXTI_IMR  |= (1 << 1) | (1 << 2);
     EXTI_FTSR |= (1 << 1) | (1 << 2);
 
-    // 5. NVIC PRIORIDADES (Ajustadas para permitir que SysTick no se congele)
-    NVIC_IPR[7] = 0x20; // Prioridad BAJA para Botón PA1 (IRQ 7)
-    NVIC_IPR[8] = 0x10; // Prioridad ALTA para Botón PA2 (IRQ 8)
-    // Nota: SysTick mantiene su prioridad por defecto que es 0x00 (Máxima)
+    // <-- CORRECCIÓN: 5. NVIC PRIORIDADES (32 bits reales) -->
+    
+    // a) Garantizar que SysTick tenga la prioridad máxima (0x00)
+    SCB_SHPR3 &= ~(0xFF << 24);
+
+    // b) Limpiar las prioridades previas de EXTI1 (IRQ 7) y EXTI2 (IRQ 8)
+    NVIC_IPR1 &= ~(0xFF << 24); // Limpia bits 24 a 31
+    NVIC_IPR2 &= ~(0xFF << 0);  // Limpia bits 0 a 7
+
+    // c) Asignar prioridades (recordando que el número menor es la prioridad más alta)
+    // Usamos los bits superiores de cada byte porque STM32 lee los 4 bits más significativos
+    NVIC_IPR2 |= (0x40 << 0);  // PA2 (EXTI2) - ALTA Prioridad (0x40)
+    NVIC_IPR1 |= (0x80 << 24); // PA1 (EXTI1) - BAJA Prioridad (0x80)
+
+    // Jerarquía resultante: SysTick (0x00) > PA2 (0x40) > PA1 (0x80)
 
     // 6. NVIC ENABLE
     NVIC_ISER0 |= (1 << 7) | (1 << 8); 
@@ -149,7 +155,7 @@ void main(void)
     while (1)
     {
         // --- Tarea de Normalidad (Background Task) ---
-        GPIOA_ODR ^= GPIOA7; 
+        GPIOA_ODR ^= GPIOA4; 
         GPIOC_ODR ^= GPIOC13;
         delay_ms_bloqueante(500); 
     }
