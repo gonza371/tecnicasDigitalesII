@@ -1,0 +1,62 @@
+\raggedbottom
+
+\section{Ejercicio 1: Interrupciones con botones de baja y alta prioridad
+}
+Para este programa se usará el código del TP1 como base, el cual se modificará para hacer interrupciones al led del TP1 con botones de baja y alta prioridad.
+Para conseguir esto se agregaron las siguientes definiciones en el archivo main.c:
+
+\begin{itemize}
+    \item Se definió la dirección base \textbf{AFIO\_BASE} 
+    \item Se definió la dirección base \textbf{EXTI\_BASE}
+    \item Se definió la dirección base \textbf{NVIC\_BASE}
+    \item Se definió el registro \textbf{AFIO\_EXTICR1}
+    \item Se definió el registro \textbf{EXTI\_IMR}
+    \item Se definió el registro \textbf{EXTI\_FTSR}
+    \item Se definió el registro \textbf{EXTI\_PR}
+    \item Se definió el registro \textbf{NVIC\_ISER0}
+    \item Se definió el registro \textbf{NVIC\_IPR}
+    \item Se definieron las mascaras \textbf{GPIOA6} y \textbf{GPIOA7}
+\end{itemize}
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.49\textwidth]{images/definiciones.png}
+    \caption*{Definiciones de los registros en main.c}
+    \label{fig:led}
+\end{figure}
+
+Aquí se configuran los registros necesarios para poder realizar las interrupciones con los botones.
+El registro \textbf{AFIO\_EXTICR1} se utiliza para configurar el pin del botón como fuente de interrupción externa; en este caso usaremos dos, el A1 y el A2.
+El registro \textbf{EXTI\_IMR} se utiliza para habilitar las interrupciones de los pines configurados.
+El registro \textbf{EXTI\_FTSR} se utiliza para configurar la interrupción por flanco de bajada.
+El registro \textbf{NVIC\_ISER0} se utiliza para habilitar las interrupciones en el NVIC, y el registro \textbf{NVIC\_IPR} se utiliza para configurar la prioridad de las interrupciones.\\
+
+A continuación agregamos las funciones de interrupción para los botones, las cuales se encargan de encender y apagar el led correspondiente al botón presionado. Para el botón de baja prioridad (A1) se encenderá el led del pin A6, y para el botón de alta prioridad (A2) se encenderá el led del pin A7.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.4\textwidth]{images/funciones.png}
+    \caption*{Agregado de funciones para interrupciones}
+    \label{fig:main1}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.4\textwidth]{images/funciones2.png}
+    \caption*{Agregado de funciones para interrupciones}
+    \label{fig:main1}
+\end{figure}
+
+Ahora pasamos a modificar la función \textbf{main}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.45\textwidth]{images/main.png}
+    \caption*{Configuración de los pines y las interrupciones en main}
+    \label{fig:main1}
+\end{figure}
+
+Primero habilitamos los clocks del GPIO y AFIO, luego configuramos los pines A5, A6 y A7 como salida, y los A1 y A2 como entrada con pull-up. Luego asociamos el pin GPIO a la línea EXTI y pasamos a configurar las interrupciones como flancos descendentes, por ultimo configuramos el NVIC con las prioridades correspondientes. 
+
+\subsection{Imagenes del Funcionamiento}

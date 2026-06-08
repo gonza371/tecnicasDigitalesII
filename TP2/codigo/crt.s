@@ -38,20 +38,6 @@ Default_Handler:
 .word 0                   /* 14: PendSV (Interrupción pendiente del sistema) */
 .word SysTick_Handler     /* 15: El handler del SysTick */
 
-/* --- Interrupciones Externas (IRQs) --- */
-
-.word WWDG_IRQHandler
-.word PVD_IRQHandler
-.word TAMPER_IRQHandler
-.word RTC_IRQHandler
-.word FLASH_IRQHandler
-.word RCC_IRQHandler
-.word EXTI0_IRQHandler
-.word EXTI1_IRQHandler
-.word EXTI2_IRQHandler
-.word EXTI3_IRQHandler
-.word EXTI4_IRQHandler
-
 // declaramos la función _reset dentro de la seccion text.reset
 .section .text.reset
 .thumb_func
@@ -59,4 +45,3 @@ Default_Handler:
 _reset:
     bl main
     b .
-    

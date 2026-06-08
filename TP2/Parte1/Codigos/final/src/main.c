@@ -104,7 +104,7 @@ void EXTI2_IRQHandler(void)
             delay_ms_bloqueante(200);
         }
         
-        // Nos aseguramos de que el LED quede apagado al salir
+        
         GPIOA_ODR &= ~GPIOA5;
     }
 }
