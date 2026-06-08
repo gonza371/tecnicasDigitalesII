@@ -20,23 +20,36 @@ Ahora se busca controlar mediante el ADC unos leds que registran el voltaje de s
     \item Se definió el registro \textbf{ADC\_DR} el cual se utiliza para leer el resultado de la conversión del ADC.
 \end{itemize}
 
-Luego se agregaron las siguientes funciones para configurar el SysTick y generar el retardo por interrupciones:
+Luego se configuró que al presionar el botón se cambie el canal del ADC entre el potenciómetro y el sensor de temperatura, para esto se configuró una interrupción externa en el pin PA2, la cual se activa al detectar un flanco de subida. En la rutina de servicio de interrupción se cambia el canal del ADC entre el potenciómetro y el sensor de temperatura.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.49\textwidth]{images/funciones2.png}
-    \caption*{Funciones para configurar el SysTick y generar el retardo por interrupciones}
-    \label{fig:funciones}
+    \includegraphics[width=0.49\textwidth]{images/conmutado.png}
+    \caption*{Diagrama de conexiones para el ejercicio 2}
+    \label{fig:parte2_2}
 \end{figure}
-\begin{itemize}
-    \item La función \textbf{SysTick\_Handler} es la rutina de servicio de interrupción del SysTick, esta función se ejecuta cada vez que se genera una interrupción, en esta función se incrementa la variable global \textbf{tick} para contar la cantidad de interrupciones generadas.
-    \item La función \textbf{sysTick\_init\_ms} es la función que se utiliza para configurar el SysTick para generar interrupciones cada cierto tiempo. Esta pone en 0 la variable tick cada vez que se inicia, hace que se divida el reloj del procesador en 8, se configura el disparo en $1ms$, inicializa la variable VAL en 0 y habilita el contador y las interrupciones del SysTick.
-    \item La función \textbf{delay\_ms\_bloqueante} es la función que se utiliza para hacer parpadear los leds utilizando el retardo por interrupciones.
-\end{itemize}
-Con esto en cuanta lo que se modificó en la función \textbf{main} para generar el retardo por interrupciones fue lo siguiente:
+
+Ahora lo nuevo que se implementa es el conversor ADC, el cual se inicializa de la siguiente forma:
+
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.49\textwidth]{images/main2.png}
-    \caption*{Función main con retardo por interrupciones}
-    \label{fig:main2}
+    \includegraphics[width=0.49\textwidth]{images/inicializarADC.png}
+    \caption*{Inicialización del ADC}
+    \label{fig:parte2_3}
 \end{figure}
+
+Ahora se programa la función main en la cual se programa de que PIN se leerá el valor del ADC, y se muestra el resultado en los leds. 
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.49\textwidth]{images/mainej2.png}
+    \caption*{Función main para el ejercicio 2}
+    \label{fig:parte2_4}
+\end{figure}
+
+\begin{itemize}
+    \item Se configuró el registro \textbf{ADC1\_SQR3} es el registro de Secuencia Regular 3. Aqui le estamos diciendo al microcontrolador qué canal físico debe conectar al núcleo del ADC en este momento. Si es 1 lee el PA1 y si es 16 lee el sensor de temperatura interno.
+    \item Se configuró el registro \textbf{ADC1\_CR2} el cual es Registro de Control 2 del ADC y es donde se configura su comportamiento. Al operar este registro con \textbf{ADC\_CR2\_SWSTART} (SoftWare Start) estamos haciendo que lea voltaje en ese momento.
+    \item Polling es el término que se utiliza cunado se configura una espera bloqueante para que se pueda realizar la conversión. Dentro del while se encuentra \textbf{ADC1\_SR \& ADC\_SR\_EOC}, el cual opera El registro de estado del ADC con el bit de fin de conversión (EOC). Mientras se está realizando la conversión el bit EOC se mantiene en 0, y cuando la conversión termina el bit EOC se pone en 1.
+    \item \textbf{Encendido progresivo de leds} en esta cadena de if se va encendiendo un led cada vez que el valor del ADC supera un umbral específico. Por ejemplo, si el valor del ADC es mayor a 819, se enciende el primer led, si es mayor a 1638 se enciende el segundo led, y así sucesivamente.
+\end{itemize}
