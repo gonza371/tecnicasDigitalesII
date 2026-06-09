@@ -1,0 +1,81 @@
+.syntax unified 
+.cpu cortex-m3
+.thumb
+.extern _esstack
+
+.section .text.manejadores // definimos la seccion text.manejadores 
+
+// función básica para manejar los punteros 
+.thumb_func 
+.weak Default_Handler
+Default_Handler:
+    b .             /* Bucle infinito */
+
+// definir los vectores ejemplo
+.weak NMI_Handler
+.thumb_set NMI_Handler, Default_Handler
+
+.weak SysTick_Handler
+.thumb_set SysTick_Handler, Default_Handler
+
+.weak HardFault_Handler
+.thumb_set HardFault_Handler, Default_Handler
+
+// --- Declaración de tus nuevas interrupciones (Corrección 1) ---
+.weak RCC_IRQHandler
+.thumb_set RCC_IRQHandler, Default_Handler
+
+.weak EXTI0_IRQHandler
+.thumb_set EXTI0_IRQHandler, Default_Handler
+
+.weak EXTI1_IRQHandler
+.thumb_set EXTI1_IRQHandler, Default_Handler
+
+.weak EXTI2_IRQHandler
+.thumb_set EXTI2_IRQHandler, Default_Handler
+
+.weak EXTI3_IRQHandler
+.thumb_set EXTI3_IRQHandler, Default_Handler
+// --------------------------------------------------------------
+
+// vectores 
+.section .isr_vector,"a",%progbits
+.word _esstack
+.word _reset
+.word NMI_Handler         /* 2:  NMI (Non-Maskable Interrupt) */
+.word HardFault_Handler   /* 3:  HardFault (falla grave) */
+.word 0                   /* 4:  MemManage (falla de memoria) */
+.word 0                   /* 5:  BusFault (falla de bus) */
+.word 0                   /* 6:  UsageFault (falla de uso) */
+.word 0                   /* 7:  Reservado */
+.word 0                   /* 8:  Reservado */
+.word 0                   /* 9:  Reservado */
+.word 0                   /* 10: Reservado */
+.word 0                   /* 11: SVCall (Llamada al Supervisor) */
+.word 0                   /* 12: Debug Monitor */
+.word 0                   /* 13: Reservado */
+.word 0                   /* 14: PendSV (Interrupción pendiente del sistema) */
+.word SysTick_Handler     /* 15: El handler del SysTick */
+
+/* --- INICIO DE INTERRUPCIONES EXTERNAS (IRQs) --- */
+/* (Corrección 2: Relleno de las IRQ 0 a 4 para alinear la memoria) */
+.word 0                   /* IRQ0: WWDG */
+.word 0                   /* IRQ1: PVD */
+.word 0                   /* IRQ2: TAMPER */
+.word 0                   /* IRQ3: RTC */
+.word 0                   /* IRQ4: FLASH */
+
+/* Ahora sí, tus interrupciones caen en su posición correcta por hardware */
+.word RCC_IRQHandler      /* IRQ5: RCC */
+.word EXTI0_IRQHandler    /* IRQ6: EXTI0 */
+.word EXTI1_IRQHandler    /* IRQ7: EXTI1 (PA1) */
+.word EXTI2_IRQHandler    /* IRQ8: EXTI2 (PA2) */
+.word EXTI3_IRQHandler    /* IRQ9: EXTI3 */
+
+// declaramos la función _reset dentro de la seccion text.reset
+.section .text.reset
+.thumb_func
+.global _reset
+_reset:
+    bl main
+    b .

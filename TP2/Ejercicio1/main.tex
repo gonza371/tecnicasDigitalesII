@@ -1,0 +1,33 @@
+\documentclass{plantilla}
+% --- Metadatos del Informe ---
+\titulo{Trabajo práctico Nro 2}
+\autores{Filsinger Gonzalo, Perea Ignacio, Leon Parfait Manuel}
+\materia{Electrónica Aplicada II}
+\comision{4R2}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+En este informe se abordará el desarrollo del trabajo práctico Nro 2, en el cual experimentaremos con las interrupciones externas del microcontrolador STM32F103C8T6, utilizando la placa BluePill. Se desarrollaran los primeros dos ejercicios del trabajo práctico.
+\end{abstract}
+
+\begin{IEEEkeywords}
+BluePill, GPIO, LED, Memoria, Interrupciones, Botónes.
+\end{IEEEkeywords}
+
+\section{Introducción}
+\IEEEPARstart{E}{n} este informe solamente se abordarán los primeros dos ejercicios del trabajo práctico, en el primero utilizaremos dos botones uno con mas prioridad que el otro para interrumpir el parpadeo de un led.
+
+\input{parte1}
+
+\section{Conclusión}
+Se logró realizar el ejercicio 1, utilizando las interrupciones externas del microcontrolador para controlar el encendido de los leds mediante botones de baja y alta prioridad.
+\newpage
+\section{CODIGOS}
+
+\input{codigos}
+
+
+\end{document}

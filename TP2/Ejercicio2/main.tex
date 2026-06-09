@@ -1,0 +1,33 @@
+\documentclass{plantilla}
+% --- Metadatos del Informe ---
+\titulo{Trabajo práctico Nro 2}
+\autores{Filsinger Gonzalo, Perea Ignacio, Leon Parfait Manuel}
+\materia{Electrónica Aplicada II}
+\comision{4R2}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+En este informe se abordará el desarrollo del trabajo práctico Nro 2 ej. 2, en el cual experimentaremos el conversor Analogo-Digital de la placa BluePill. Se desarrollará el segundo ejercicio del trabajo práctico.
+\end{abstract}
+
+\begin{IEEEkeywords}
+BluePill, GPIO, LED, Memoria, Botónes, ADC.
+\end{IEEEkeywords}
+
+\section{Introducción}
+\IEEEPARstart{E}{n} este informe solamente se abordará el segundo ejercicio del trabajo práctico, en que haremos uso del ADC para medir la tensión de salida de un potenciometro (Hasta 3.3V), y temperatura de un sensor interno, según un boton que cambia entre la lectura del potenciometro y la lectura del sensor de temperatura.
+
+\input{parte2}
+
+\section{Conclusión}
+Se logró configurar el ADC para medir la tensión de salida de un potenciómetro y la temperatura del sensor interno del microcontrolador, mostrando los resultados en los leds.
+\newpage
+\section{CODIGOS}
+
+\input{codigos}
+
+
+\end{document}
