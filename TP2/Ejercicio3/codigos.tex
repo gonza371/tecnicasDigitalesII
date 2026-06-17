@@ -1,0 +1,149 @@
+\subsection{main.c}
+\begin{lstlisting}[caption={Configuración inicial en main.c}, label={cod:main}]
+
+\begin{lstlisting}[language=Linker]
+#include "stm32f10x.h"
+
+volatile uint32_t msTicks = 0;      
+volatile uint32_t globalTicks = 0;   
+
+
+volatile uint8_t flag_sensor_ext = 0; 
+
+
+void SysTick_Handler(void) {
+    if (msTicks > 0) {
+        msTicks--;
+    }
+    globalTicks++;
+}
+
+void EXTI0_IRQHandler(void) {
+    
+    if(EXTI->PR & EXTI_PR_PR0) {
+        flag_sensor_ext = !flag_sensor_ext; 
+        EXTI->PR = EXTI_PR_PR0;             
+    }
+}
+
+
+
+void Delay_ms(uint32_t delay) {
+    msTicks = delay;
+    while(msTicks != 0); // 
+
+void Init_SysTick(void) {
+    SysTick_Config(SystemCoreClock / 1000);
+}
+
+void Init_GPIO(void) {
+    RCC->APB2ENR |= RCC_APB2ENR_AFIOEN | RCC_APB2ENR_IOPAEN | 
+                    RCC_APB2ENR_IOPBEN | RCC_APB2ENR_IOPCEN;
+
+    GPIOC->CRH &= ~(0xF << 20);
+    GPIOC->CRH |= (0x2 << 20);
+
+    GPIOA->CRL &= ~(0xFFFFF);
+    GPIOA->CRL |= 0x22222;
+
+    GPIOA->CRL &= ~(0xF << 20);
+
+
+    GPIOB->CRL &= ~(0xF << 0);
+    GPIOB->CRL |= (0x8 << 0);
+    GPIOB->ODR |= (1 << 0);
+}
+
+void Init_EXTI(void) {
+
+    AFIO->EXTICR[0] &= ~(0xF << 0);
+    AFIO->EXTICR[0] |= (0x1 << 0);
+
+    EXTI->IMR |= EXTI_IMR_MR0;    
+    EXTI->FTSR |= EXTI_FTSR_TR0;   
+
+
+    NVIC_EnableIRQ(EXTI0_IRQn);
+}
+
+void Init_ADC(void) {
+
+    RCC->APB2ENR |= RCC_APB2ENR_ADC1EN;
+    
+
+    ADC1->CR2 |= ADC_CR2_ADON;
+    Delay_ms(1); 
+    
+
+    ADC1->CR2 |= ADC_CR2_TSVREFE;
+    
+
+    ADC1->CR2 |= ADC_CR2_RSTCAL;
+    while(ADC1->CR2 & ADC_CR2_RSTCAL);
+    ADC1->CR2 |= ADC_CR2_CAL;
+    while(ADC1->CR2 & ADC_CR2_CAL);
+}
+
+
+uint16_t Read_ADC(uint8_t channel) {
+
+    ADC1->SQR3 = channel;
+    
+
+    ADC1->CR2 |= ADC_CR2_SWSTART;
+    
+
+    while(!(ADC1->SR & ADC_SR_EOC));
+    
+
+    return ADC1->DR;
+}
+
+void Actualizar_LEDs_ADC(uint16_t adc_val) {
+
+    GPIOA->BRR = 0x1F; 
+    
+    if(adc_val > 682)  GPIOA->BSRR = GPIO_BSRR_BS0;
+    if(adc_val > 1364) GPIOA->BSRR = GPIO_BSRR_BS1;
+    if(adc_val > 2046) GPIOA->BSRR = GPIO_BSRR_BS2;
+    if(adc_val > 2728) GPIOA->BSRR = GPIO_BSRR_BS3;
+    if(adc_val > 3410) GPIOA->BSRR = GPIO_BSRR_BS4;
+}
+
+
+
+int main(void) {
+
+    SystemInit();
+    
+
+    Init_SysTick();
+    Init_GPIO();
+    Init_EXTI();
+    Init_ADC();
+
+    uint32_t last_led_toggle = 0;
+    uint16_t valor_adc = 0;
+
+    while (1) {
+
+        if (globalTicks - last_led_toggle >= 500) {
+            last_led_toggle = globalTicks;
+            GPIOC->ODR ^= GPIO_ODR_ODR13;
+        }
+
+
+        if (flag_sensor_ext) {
+            valor_adc = Read_ADC(5); 
+        } else {
+            valor_adc = Read_ADC(16);
+        }
+
+
+        Actualizar_LEDs_ADC(valor_adc);
+        
+
+        Delay_ms(50); 
+    }
+}
+\end{lstlisting}

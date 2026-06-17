@@ -1,0 +1,23 @@
+\section*{2. Descripción de la migración hacia CMSIS}
+La migración consistió en reemplazar la instanciación de macros personalizadas con los punteros físicos a las direcciones de memoria (\texttt{\#define RCC\_APB2ENR *(volatile uint32\_t *)0x40021018}) para utilizar estas direcciones ya definidas en la biblioteca del estándar del fabricante (\texttt{stm32f10x.h}).
+
+\begin{itemize}
+    \item \textbf{Simplificación de escritura de registros:} Al llamar a \texttt{GPIOA->CRL} o a \texttt{ADC1->CR2}, el compilador calcula automáticamente el offset de memoria basándose en la dirección base del registro correspondiente.
+    \item \textbf{Programación con palabras:} Se incorporó el uso de constantes predefinidas como \texttt{GPIO\_BSRR\_BS0} o \texttt{ADC\_CR2\_ADON}. Esto facilita a la hora de programar el calcular manualmente qué bit levantar (ej. \texttt{|= (1 \textless\textless\ 0)}) facilitando la comprensión visual del código.
+\end{itemize}
+
+\section*{3. Explicación de la configuración del SysTick}
+
+
+\begin{itemize}
+    \item \textbf{Configuración:} Mediante la llamada a la función \texttt{SysTick\_Config(SystemCoreClock / 1000);}, se cargó el registro de recarga (\textit{Reload Value Register}) con la cantidad exacta de ciclos de reloj de CPU que caben en 1 milisegundo.
+    \item \textbf{Operación en la Rutina de Interrupción (ISR):} Cada vez que la cuenta llega a cero, el hardware detiene el programa principal y ejecuta el handler \texttt{SysTick\_Handler()}. Dentro de esta interrupción, se decrementan variables globales (como \texttt{msTicks}) e incrementan contadores continuos (como \texttt{globalTicks}).
+    \item \textbf{Implementación de retardos:} Esto permitió crear una función de bloqueo determinista \texttt{Delay\_ms()}, la cual, al atarse al decremento asíncrono modificado por hardware, garantiza una demora temporal estricta de hardware, posibilitando además la convivencia de tareas no bloqueantes (como el LED parpadeante continuo) junto con la lógica del conversor ADC.
+\end{itemize}
+
+\section*{4. Análisis comparativo: BareMetal puro vs. CMSIS}
+\begin{itemize}
+    \item \textbf{Legibilidad:} El BareMetal puro te obliga a revisar el datasheet  para buscar las direcciones de memoria correspondientes a sus respectivos registros. Utilizando CMSIS, la legibilidad mejora drásticamente, documentándose el código por sí mismo (\texttt{ADC1->CR2}).
+    \item \textbf{Mantenimiento y Portabilidad:} Si el diseño exigiera migrar hacia otra línea de la familia STM32 (como F4 o G4), un desarrollo con punteros manuales requeriría reescribir prácticamente todo el código, ya que el mapa de memoria cambia. Con CMSIS, dado que la interfaz está estandarizada por ARM, funciones vinculadas al microcontrolador (como el control del NVIC o SysTick) son portables universalmente, y los periféricos mantienen su sintaxis estructural.
+    \item \textbf{Organización:} Se obtienen las definiciones a los registros en una única cabecera del fabricante, previniendo errores de tipeo (como una dirección mal puesta) que al compilar no da error, pero no funcionaria la implementación física.
+\end{itemize}
